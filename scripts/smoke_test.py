@@ -24,7 +24,9 @@ def main() -> None:
     print(f"  - {len(laps)} lap rows")
 
     corrected = fuel_apply(laps)
-    print(f"  - fuel-corrected lap time range: {corrected['LapTimeFuelCorrected'].min():.2f} – {corrected['LapTimeFuelCorrected'].max():.2f} s")
+    print(
+        f"  - fuel-corrected lap time range: {corrected['LapTimeFuelCorrected'].min():.2f} - {corrected['LapTimeFuelCorrected'].max():.2f} s"
+    )
 
     summary = stint_summary(corrected.assign(CircuitName="Bahrain"))
     print(f"  - {len(summary)} stints summarised")
