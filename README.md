@@ -227,15 +227,17 @@ The CI runs `pytest` (28 tests, including model and API tests), `ruff check`, `r
 
 ## Three-race retrospective
 
-Concrete business-value check: does the simulator track reality on famous strategy calls? Full writeups under `docs/writeups/retrospective_*.md`.
+Concrete business-value check: does the simulator track reality on famous strategy calls? Full writeups under `docs/writeups/retrospective_*.md`. Reproducible via `make retrospective`.
 
-| Race | Simulator MAE vs actual finish | Notes |
-|---|---|---|
-| 2024 Monaco GP (Leclerc's home win, 1-stop endurance race) | **2.33 positions** | Hardest race for the simulator — single-stint format with red flag isn't well-modelled |
-| 2024 Hungarian GP (McLaren team-orders flip) | _see writeup_ | |
-| 2024 Italian GP (Leclerc's 1-stop Monza win) | _see writeup_ | |
+| Race | Drivers modelled | Simulator MAE vs actual finish | Notes |
+|---|---|---|---|
+| 2024 Hungarian GP (McLaren team-orders flip) | 20 | **0.99 positions** | Best case — multi-stop race the simulator handles well |
+| 2024 Italian GP (Leclerc's 1-stop Monza win) | 20 | **1.62 positions** | Middle case — Ferrari's deliberately-slow first stint creates pace prediction noise |
+| 2024 Monaco GP (Leclerc's home win, 1-stop endurance race) | 16 | **2.33 positions** | Worst case — Monaco has no overtaking; simulator's global overtake-difficulty parameter underestimates this |
 
-The Monaco MAE reflects a real model weakness: the simulator's overtake difficulty parameter is a global default and doesn't capture how impossible passing is at Monaco specifically. Documented in `docs/known_limitations.md` §5.
+**Average MAE across the three: 1.65 positions.** That number is the honest answer to *"how useful would this be on the pit wall?"* — a strategist using the simulator to compare alternate strategies would get the finishing order roughly right but wouldn't bet money on specific positions inside ±2 places.
+
+Monaco's larger error is the model's clearest weakness; documented in `docs/known_limitations.md` §5.
 
 ## Sensitivity analysis
 

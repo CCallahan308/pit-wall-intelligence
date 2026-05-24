@@ -1,12 +1,14 @@
 # LinkedIn Post — Pit Wall Intelligence
 
-> **Production-scale metrics, ready to post.** Run on 85 races across 2020/2021/2023/2024:
+> **Production-scale metrics, honest numbers.** Run on 85 races across 2020/2021/2023/2024:
 > - 89,923 lap rows / 3,962 stints / 2,029 green-flag pit stops / 33 circuits
-> - Degradation MAE: 1.38s within-circuit (15k test laps), 5.70s cross-circuit
-> - Undercut classifier: AUC 0.701, Brier 0.093 on 466-stop test
-> - Pit-cost ranges match broadcast (Singapore 31.4s slowest, Spa 20.5s fastest)
+> - Degradation: 1.38s MAE within-circuit (15k test laps), 9.4s LOCO median across all 33 circuits
+> - Undercut classifier (group-aware CV): AUC 0.69 ± 0.04, Brier 0.088 vs 0.094 constant baseline
+> - 3-race retrospective average MAE: 1.65 positions (Hungary 0.99, Italy 1.62, Monaco 2.33)
 >
-> Before posting, record the 90-second Loom walkthrough and pin it as a comment with the GitHub link.
+> Before posting:
+> - Record the 90-second Loom walkthrough and pin it as a comment with the GitHub link.
+> - Replace "live demo" line in Version A with the actual deployed URLs (or remove the line — Streamlit + FastAPI are local-only until external accounts are wired).
 
 Three versions below. Use **Version A** as your primary post (medium-form, ~1,500 chars, lands well in the LinkedIn algorithm). Versions B and C are short-form follow-ups for a multi-post sequence.
 
@@ -24,14 +26,15 @@ Three versions below. Use **Version A** as your primary post (medium-form, ~1,50
 >
 > Under the hood:
 >
-> → Isotonic regression for tyre degradation curves per compound × circuit (102 fitted curves, MAE 1.38s on a 15k-lap within-circuit holdout)
-> → A calibrated LightGBM undercut classifier — AUC 0.70, Brier 0.09, isotonic-calibrated on 1,861 historical pit stops
+> → Isotonic regression for tyre degradation curves per compound × circuit (102 fitted curves, MAE 1.38s on a 15k-lap within-circuit holdout, LOCO median 9.4s)
+> → A calibrated LightGBM undercut classifier — AUC 0.69 ± 0.04 (5-fold GroupKFold), Brier 0.088, isotonic-calibrated on 1,861 historical pit stops with REAL features (gap_ahead, gap_behind, deg_slope all derived from data, not hardcoded)
 > → Monte Carlo race simulator with per-lap pace noise, pit-loss variance, and Poisson Safety Car arrivals
 > → 6-page Streamlit dashboard with a race-by-race strategy timeline view that mirrors a broadcast strategy graphic
+> → 3-race retrospective on Monaco/Hungary/Italy 2024: simulator MAE 1.65 positions vs actual finishing order
 >
 > Why this matters: most public F1 projects predict outcomes. Real strategy work is about *quantifying decisions in tenths of a second*. That distinction is what separates a data science blog post from work a motorsport team would actually use.
 >
-> Built with Python, pandas, scikit-learn, LightGBM, DuckDB, dbt, Plotly, Streamlit, FastAPI. Every model has a model card. CI gates schema validation. Live deploy in the README.
+> Built with Python, pandas, scikit-learn, LightGBM, DuckDB, dbt, Plotly, Streamlit, FastAPI. Every model has a model card with calibration and permutation-importance plots. MLflow logs every retrain. CI gates schema validation. The whole pipeline reproduces with `make reproduce`.
 >
 > 📁 Repo + live demo: [github.com/CCallahan308/pit-wall-intelligence]
 > 📝 Methodology writeup: [link]
