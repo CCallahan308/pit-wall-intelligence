@@ -1,5 +1,15 @@
 # LinkedIn Post — Pit Wall Intelligence
 
+> **DO NOT POST YET.** This file is the launch script for when the full-season pipeline is loaded
+> and the metrics below are confirmed at scale. Posting now would force you to claim numbers you
+> haven't earned at production-grade sample size. Verified metrics on the current 6-race sample:
+> - Degradation MAE: 0.83 s within-circuit (good), 9.58 s cross-circuit (an honest limitation)
+> - Undercut classifier AUC: 0.741 on 123 stops (small-N, will sharpen with more races)
+> - Pit-cost per circuit: 20-27 s medians, broadcast-realistic
+>
+> When you ingest the full season and re-run `scripts/train_and_validate.py`, **swap in the real
+> numbers below** before posting. Do not post placeholders.
+
 Three versions below. Use **Version A** as your primary post (medium-form, ~1,500 chars, lands well in the LinkedIn algorithm). Versions B and C are short-form follow-ups for a multi-post sequence.
 
 ---
@@ -16,10 +26,10 @@ Three versions below. Use **Version A** as your primary post (medium-form, ~1,50
 >
 > Under the hood:
 >
-> → Isotonic regression for tyre degradation curves per compound × circuit (MAE 0.13s on held-out stints)
-> → A calibrated LightGBM undercut classifier — AUC 0.82, Brier 0.16, with SHAP-based per-prediction explanations
-> → Monte Carlo race simulator branching on weather windows and Safety Car arrival rates
-> → Live Streamlit dashboard + FastAPI service exposing the strategy engine
+> → Isotonic regression for tyre degradation curves per compound × circuit (MAE {X}s within-circuit on held-out stints — replace with full-season measurement before posting)
+> → A calibrated LightGBM undercut classifier — AUC {X}, Brier {X}, with isotonic probability calibration (SHAP scaffolded for full-season run)
+> → Monte Carlo race simulator with per-lap pace noise, pit-loss variance, and Poisson Safety Car arrivals
+> → Streamlit dashboard + structure for a FastAPI strategy endpoint
 >
 > Why this matters: most public F1 projects predict outcomes. Real strategy work is about *quantifying decisions in tenths of a second*. That distinction is what separates a data science blog post from work a motorsport team would actually use.
 >

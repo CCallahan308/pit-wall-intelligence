@@ -5,6 +5,4 @@ pitwall:
       type: duckdb
       path: "../data/processed/pitwall.duckdb"
       threads: 4
-      extensions:
-        - httpfs
-        - parquet
+      # parquet is now built-in to duckdb; httpfs only needed for remote reads.

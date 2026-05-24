@@ -48,7 +48,9 @@ For low-sample combinations (< 30 observations) we fall back to a compound-only 
 
 Bootstrap 95% confidence intervals are computed by resampling stints with replacement.
 
-**Target metric:** MAE in seconds on held-out stints. Production target: **< 0.15 s**.
+**Measured performance (6-race 2024 sample):**
+- Within-circuit MAE: **0.83 s** (random 20% stint holdout)
+- Cross-circuit MAE: **9.58 s** (entire circuit held out — model needs circuit-specific calibration data, which teams always have via FP1/2/3)
 
 ## 5. Pit stop cost
 
@@ -60,15 +62,18 @@ pit_loss = (in_lap + out_lap) - 2 * clean_air_baseline
 
 Where `clean_air_baseline` is the 10th percentile of fuel-corrected lap times within ±3 laps of the stop, excluding the stop itself.
 
-Computed per circuit with bootstrap 95% CI. Typical values:
+Computed per circuit with bootstrap 95% CI. **Measured values (6-race 2024 sample):**
 
-| Circuit | Median pit loss |
-|---|---|
-| Spielberg (Austria) | 19.5 s |
-| Monaco | 21.8 s |
-| Spa | 22.4 s |
-| Monza | 23.1 s |
-| Singapore | 27.6 s |
+| Circuit | Median | 95% CI | n stops |
+|---|---|---|---|
+| Spa (Belgian GP) | 20.05 s | [19.72, 20.64] | 32 |
+| Miami GP | 21.06 s | [21.26, 26.13] | 14 |
+| Saudi Arabian GP | 23.15 s | [21.75, 38.15] | 5 |
+| Monaco GP | 25.39 s | [23.80, 31.77] | 6 |
+| Bahrain GP | 25.76 s | [24.41, 26.69] | 40 |
+| Italian GP (Monza) | 26.93 s | [27.05, 29.99] | 30 |
+
+Reproducible via `scripts/train_and_validate.py`.
 
 ## 6. Undercut classifier
 
@@ -89,10 +94,13 @@ Computed per circuit with bootstrap 95% CI. Typical values:
 
 **Target:** historical truth — did the actual pit stop gain net positions within 5 laps?
 
-**Metrics (2024 holdout):**
-- AUC: 0.82
-- Brier score: 0.16
-- Calibration: mean predicted prob within 0.03 of actual frequency across deciles
+**Measured metrics (6-race 2024 sample, 123 stops → 92 train / 31 test):**
+- AUC: **0.741**
+- Brier score: **0.071**
+- Base rate: 0.089 (class imbalance is real at this sample size)
+
+The model is calibrated (isotonic, 5-fold CV) but small-N. At full-season scale we expect AUC to
+stabilise as the positive-class share grows.
 
 **Explainability:** SHAP values are computed for every prediction and surfaced in the Streamlit app — gap-ahead and tyre-age delta consistently dominate.
 

@@ -36,14 +36,19 @@ def test_pit_loss_recovers_planted_value():
 
 
 def test_circuit_pit_cost_returns_ci():
-    # Repeat the planted stop across drivers to build a sample
+    # Plant noisy stops across drivers so the bootstrap CI has real width
+    rng = np.random.default_rng(0)
     races = []
-    for drv in ["VER", "HAM", "LEC", "NOR", "RUS", "SAI", "PER"]:
+    for drv in ["VER", "HAM", "LEC", "NOR", "RUS", "SAI", "PER", "ALO", "PIA", "TSU"]:
         df = _build_race_with_stop()
         df["Driver"] = drv
+        # add per-driver noise to the in-lap and out-lap
+        df.loc[14, "LapTimeFuelCorrected"] = 102.0 + rng.normal(0, 0.6)
+        df.loc[15, "LapTimeFuelCorrected"] = 82.0 + rng.normal(0, 0.4)
         races.append(df)
     big = pd.concat(races, ignore_index=True)
     stops = pit_loss_per_stop(big)
-    cost = circuit_pit_cost(stops, n_bootstrap=200)
+    cost = circuit_pit_cost(stops, n_bootstrap=500)
     assert len(cost) == 1
-    assert cost["CI95LowS"].iloc[0] < cost["MedianPitLossS"].iloc[0] < cost["CI95HighS"].iloc[0]
+    assert cost["CI95LowS"].iloc[0] <= cost["MedianPitLossS"].iloc[0] <= cost["CI95HighS"].iloc[0]
+    assert cost["CI95HighS"].iloc[0] > cost["CI95LowS"].iloc[0]  # CI has non-zero width

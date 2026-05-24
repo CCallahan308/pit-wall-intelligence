@@ -23,8 +23,8 @@ select
         order by lap_number
     )                                                          as stint_position,
     case
-        when pit_in_time is not null then false
-        when pit_out_time is not null then false
+        when pit_in_time_s is not null then false
+        when pit_out_time_s is not null then false
         when track_status <> '1' then false
         when deleted then false
         else true

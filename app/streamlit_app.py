@@ -32,9 +32,9 @@ st.markdown(
 )
 
 col1, col2, col3 = st.columns(3)
-col1.metric("Seasons covered", "5", "2020 – 2024")
-col2.metric("Lap rows", "12.4M")
-col3.metric("Undercut model AUC", "0.82", "Brier 0.16")
+col1.metric("Races ingested", "6", "2024 sample")
+col2.metric("Lap rows", "6,064")
+col3.metric("Undercut model AUC", "0.74", "Brier 0.071")
 
 st.divider()
 st.caption("© 2026 Christian Callahan · MIT licensed · Not affiliated with F1 or the FIA")

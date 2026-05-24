@@ -76,3 +76,7 @@ dbt/logs/
 # OS
 Thumbs.db
 desktop.ini
+dbt/.user.yml
+dbt/target/
+dbt/logs/
+dbt/dbt_packages/

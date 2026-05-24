@@ -41,6 +41,8 @@ class RaceConfig:
     sc_neutralisation_s: float = 35.0
     overtake_difficulty_s: float = 0.4  # pace advantage needed to pass per lap
     fuel_burn_s_per_lap: float = 0.048  # ~0.03s/kg * 1.6kg/lap
+    lap_time_noise_s: float = 0.25     # per-lap pace noise (sigma) -- traffic, kerbs, tyre temp
+    pit_loss_noise_s: float = 0.8      # per-stop pit-loss variance
 
 
 @dataclass
@@ -81,14 +83,14 @@ class RaceSimulator:
         for lap in range(1, self.config.total_laps + 1):
             for i, d in enumerate(drivers):
                 t = self._lap_time(d, lap, stint_idx[i], stint_lap[i])
+                t += self.rng.normal(0.0, self.config.lap_time_noise_s)
                 if lap in d.pit_laps:
-                    t += d.pit_loss_s
+                    t += d.pit_loss_s + self.rng.normal(0.0, self.config.pit_loss_noise_s)
                     stint_idx[i] = min(stint_idx[i] + 1, len(d.compounds) - 1)
                     stint_lap[i] = 1
                 else:
                     stint_lap[i] += 1
                 if lap in sc_laps:
-                    # SC compresses the field — clamp lap time to a neutralised value
                     t = max(t, self.config.sc_neutralisation_s)
                 cum_time[i] += t
 

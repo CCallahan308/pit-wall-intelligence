@@ -15,26 +15,29 @@ Given the current race state at lap N, estimate the probability that pitting now
 
 ## Training data
 
-- 2020–2023 race sessions (4 seasons, ~88 races)
-- Each historical pit stop becomes one positive or negative example based on the 5-lap-forward position change
-- Training set: ~3,400 stops; held-out 2024 season: ~860 stops
+**Current sample (6 races from 2024):**
+- 123 historical pit stops total, 9% positive base rate (positions gained within 5 laps)
+- 92 training / 31 test (75/25 random split, seed=42)
 
-## Performance
+The labels come from real position deltas; many features (gap_ahead, gap_behind, deg_slope) are
+currently filled with reasonable placeholders because lap-by-lap gap data requires the Ergast lap
+endpoint, which the active environment cannot reach. Wiring those in is the next step.
 
-| Metric | Value (2024 holdout) | Notes |
+## Performance (measured, not aspirational)
+
+| Metric | Value | Notes |
 |---|---|---|
-| AUC | 0.82 | |
-| Brier score | 0.16 | |
-| Log loss | 0.51 | |
-| Calibration error (ECE) | 0.029 | mean abs diff between predicted prob and actual freq across 10 bins |
+| AUC | **0.741** | on 31-stop test set |
+| Brier score | **0.071** | calibrated probabilities (isotonic, 5-fold CV) |
+| Base rate | 0.089 | class imbalance — positive examples are rare in a 6-race sample |
 
-## Feature importance (top 5, SHAP global)
+These numbers are honest but small-N. At full-season scale (~600 stops) we expect AUC to stabilise
+and the base rate to grow as we capture more competitive pit-window decisions vs. forced/SC stops.
 
-1. `tyre_age_delta_vs_ahead`
-2. `gap_ahead_s`
-3. `current_deg_slope`
-4. `laps_remaining`
-5. `expected_fresh_pace_delta`
+## Feature importance
+
+Not yet computed — SHAP is wired through `[explain]` extras (`uv sync --extra explain`) but
+requires a re-run after the full season is loaded for the global ranking to be meaningful.
 
 ## Known limitations
 
