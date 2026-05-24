@@ -148,8 +148,8 @@ def predict_undercut(req: UndercutRequest) -> UndercutResponse:
 
 @app.post("/simulate_race", response_model=SimulateResponse)
 def simulate_race(req: SimulateRequest) -> SimulateResponse:
-    if _DEG is None:
-        raise HTTPException(status_code=503, detail="Degradation model not loaded.")
+    # Validate input first (422 before 503): a malformed request should always
+    # surface as a client error even when the model isn't loaded.
     if len(req.drivers) < 2:
         raise HTTPException(status_code=422, detail="Need at least 2 drivers to simulate a race.")
     for d in req.drivers:
@@ -158,6 +158,8 @@ def simulate_race(req: SimulateRequest) -> SimulateResponse:
                 status_code=422,
                 detail=f"{d.code}: compounds ({len(d.compounds)}) must be len(pit_laps)+1 ({len(d.pit_laps) + 1}).",
             )
+    if _DEG is None:
+        raise HTTPException(status_code=503, detail="Degradation model not loaded.")
 
     t0 = time.perf_counter()
     plans = [
