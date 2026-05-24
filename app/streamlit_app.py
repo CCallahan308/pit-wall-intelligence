@@ -21,10 +21,11 @@ sidebar_brand()
 st.sidebar.markdown("### Navigate")
 st.sidebar.markdown(
     "- **Stint Analysis** - fuel-corrected pace per stint\n"
-    "- **Pit Window Finder** - undercut/overcut probability\n"
+    "- **Pit Window Finder** - calibrated undercut probability\n"
     "- **Driver Comparison** - head-to-head pace\n"
     "- **Strategy Simulator** - Monte Carlo race outcomes\n"
-    "- **Season Overview** - circuit-wide trends"
+    "- **Season Overview** - circuit-wide trends\n"
+    "- **Race-by-race** - strategy timelines per race"
 )
 
 
