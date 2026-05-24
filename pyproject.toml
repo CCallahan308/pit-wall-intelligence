@@ -67,7 +67,13 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "B", "UP", "SIM", "RUF"]
-ignore = ["E501"]
+ignore = [
+    "E501",   # line too long
+    "N803",   # ML convention: X is the standard feature-matrix variable name
+    "N806",   # ML convention: allow uppercase locals like X_train, X_test
+    "RUF002", # ambiguous unicode chars in docstrings (en-dash, multiplication sign)
+    "RUF003", # ambiguous unicode chars in comments
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

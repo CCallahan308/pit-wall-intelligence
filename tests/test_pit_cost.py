@@ -10,16 +10,18 @@ from pitwall.models.pit_cost import circuit_pit_cost, pit_loss_per_stop
 
 def _build_race_with_stop():
     n = 30
-    df = pd.DataFrame({
-        "Year": [2024] * n,
-        "Round": [1] * n,
-        "Driver": ["VER"] * n,
-        "LapNumber": list(range(1, n + 1)),
-        "LapTimeFuelCorrected": [80.0] * n,
-        "PitInTime": [pd.NaT] * n,
-        "PitOutTime": [pd.NaT] * n,
-        "CircuitName": ["Monaco"] * n,
-    })
+    df = pd.DataFrame(
+        {
+            "Year": [2024] * n,
+            "Round": [1] * n,
+            "Driver": ["VER"] * n,
+            "LapNumber": list(range(1, n + 1)),
+            "LapTimeFuelCorrected": [80.0] * n,
+            "PitInTime": [pd.NaT] * n,
+            "PitOutTime": [pd.NaT] * n,
+            "CircuitName": ["Monaco"] * n,
+        }
+    )
     # Plant a stop on lap 15 → in-lap +22s, out-lap +2s
     df.loc[14, "PitInTime"] = pd.Timestamp("2024-01-01")
     df.loc[14, "LapTimeFuelCorrected"] = 102.0

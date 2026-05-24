@@ -34,7 +34,6 @@ import pandas as pd
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.metrics import brier_score_loss, roc_auc_score
 
-
 FEATURE_COLS: list[str] = [
     "gap_ahead_s",
     "gap_behind_s",
@@ -58,7 +57,7 @@ class UndercutClassifier:
     feature_cols: list[str] = field(default_factory=lambda: list(FEATURE_COLS))
     metrics: dict = field(default_factory=dict)
 
-    def fit(self, X: pd.DataFrame, y: pd.Series) -> "UndercutClassifier":
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> UndercutClassifier:
         base = lgb.LGBMClassifier(
             n_estimators=400,
             learning_rate=0.05,
@@ -85,18 +84,22 @@ class UndercutClassifier:
         proba = self.predict_proba(X)
         auc = roc_auc_score(y, proba)
         brier = brier_score_loss(y, proba)
-        self.metrics = {"auc": float(auc), "brier": float(brier), "n": int(len(y))}
+        self.metrics = {"auc": float(auc), "brier": float(brier), "n": len(y)}
         return self.metrics
 
     def save(self, path: str | Path) -> None:
         import joblib
 
-        joblib.dump({"model": self.model, "feature_cols": self.feature_cols, "metrics": self.metrics}, path)
+        joblib.dump(
+            {"model": self.model, "feature_cols": self.feature_cols, "metrics": self.metrics}, path
+        )
 
     @classmethod
-    def load(cls, path: str | Path) -> "UndercutClassifier":
+    def load(cls, path: str | Path) -> UndercutClassifier:
         import joblib
 
         blob = joblib.load(path)
-        obj = cls(model=blob["model"], feature_cols=blob["feature_cols"], metrics=blob.get("metrics", {}))
+        obj = cls(
+            model=blob["model"], feature_cols=blob["feature_cols"], metrics=blob.get("metrics", {})
+        )
         return obj

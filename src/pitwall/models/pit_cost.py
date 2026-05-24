@@ -43,23 +43,25 @@ def pit_loss_per_stop(
                 continue
             in_lap = g.loc[i, "LapTimeFuelCorrected"]
             out_lap = g.loc[i + 1, "LapTimeFuelCorrected"]
-            window = g.loc[max(0, i - pit_window): min(len(g) - 1, i + pit_window + 1)]
+            window = g.loc[max(0, i - pit_window) : min(len(g) - 1, i + pit_window + 1)]
             clean = window.drop(index=[i, i + 1], errors="ignore")["LapTimeFuelCorrected"].dropna()
             if len(clean) < 2 or pd.isna(in_lap) or pd.isna(out_lap):
                 continue
             baseline = clean.quantile(clean_lap_quantile)
             loss = (in_lap + out_lap) - 2 * baseline
-            rows.append({
-                "Year": int(year),
-                "Round": int(rnd),
-                "Driver": drv,
-                "PitLap": int(g.loc[i, "LapNumber"]),
-                "InLapS": float(in_lap),
-                "OutLapS": float(out_lap),
-                "BaselineS": float(baseline),
-                "PitLossS": float(loss),
-                "CircuitName": g.loc[i, "CircuitName"] if "CircuitName" in g else None,
-            })
+            rows.append(
+                {
+                    "Year": int(year),
+                    "Round": int(rnd),
+                    "Driver": drv,
+                    "PitLap": int(g.loc[i, "LapNumber"]),
+                    "InLapS": float(in_lap),
+                    "OutLapS": float(out_lap),
+                    "BaselineS": float(baseline),
+                    "PitLossS": float(loss),
+                    "CircuitName": g.loc[i, "CircuitName"] if "CircuitName" in g else None,
+                }
+            )
     return pd.DataFrame(rows)
 
 
@@ -72,12 +74,14 @@ def circuit_pit_cost(stops: pd.DataFrame, n_bootstrap: int = 1000) -> pd.DataFra
         if len(x) < 5:
             continue
         boot = rng.choice(x, size=(n_bootstrap, len(x)), replace=True).mean(axis=1)
-        rows.append({
-            "CircuitName": circuit,
-            "MedianPitLossS": float(np.median(x)),
-            "MeanPitLossS": float(np.mean(x)),
-            "CI95LowS": float(np.percentile(boot, 2.5)),
-            "CI95HighS": float(np.percentile(boot, 97.5)),
-            "NStops": int(len(x)),
-        })
+        rows.append(
+            {
+                "CircuitName": circuit,
+                "MedianPitLossS": float(np.median(x)),
+                "MeanPitLossS": float(np.mean(x)),
+                "CI95LowS": float(np.percentile(boot, 2.5)),
+                "CI95HighS": float(np.percentile(boot, 97.5)),
+                "NStops": len(x),
+            }
+        )
     return pd.DataFrame(rows).sort_values("MedianPitLossS")

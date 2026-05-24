@@ -19,7 +19,9 @@ from pitwall.config import (
 )
 
 
-def fuel_mass_at_lap(lap_number: pd.Series | np.ndarray, total_laps: int | None = None) -> np.ndarray:
+def fuel_mass_at_lap(
+    lap_number: pd.Series | np.ndarray, total_laps: int | None = None
+) -> np.ndarray:
     """Estimate kg of fuel remaining at the start of `lap_number`.
 
     Assumes linear burn from STARTING_FUEL_KG at lap 1 to ~1kg reserve at the
@@ -43,7 +45,9 @@ def fuel_corrected_time(
     return lap_time_s - mass * FUEL_TIME_PENALTY_S_PER_KG
 
 
-def apply(laps: pd.DataFrame, group_cols: tuple[str, ...] = ("Year", "Round", "Driver")) -> pd.DataFrame:
+def apply(
+    laps: pd.DataFrame, group_cols: tuple[str, ...] = ("Year", "Round", "Driver")
+) -> pd.DataFrame:
     """Add a `LapTimeFuelCorrected` column to a laps dataframe.
 
     Expects columns: LapTime (timedelta or float seconds), LapNumber, plus

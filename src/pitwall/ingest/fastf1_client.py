@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import argparse
 import logging
-from pathlib import Path
 
 import fastf1
 import pandas as pd
@@ -51,7 +50,11 @@ def fetch_session(year: int, rnd: int, session_type: str) -> dict[str, pd.DataFr
         weather["Round"] = rnd
         weather["SessionType"] = session_type
 
-    results = session.results.reset_index(drop=True).copy() if session.results is not None else pd.DataFrame()
+    results = (
+        session.results.reset_index(drop=True).copy()
+        if session.results is not None
+        else pd.DataFrame()
+    )
     if not results.empty:
         results["Year"] = year
         results["Round"] = rnd
@@ -65,7 +68,13 @@ def persist(frames: dict[str, pd.DataFrame], year: int, rnd: int, session_type: 
     for table, df in frames.items():
         if df is None or df.empty:
             continue
-        path = RAW_DIR / table / f"year={year}" / f"round={rnd:02d}" / f"session={session_type}.parquet"
+        path = (
+            RAW_DIR
+            / table
+            / f"year={year}"
+            / f"round={rnd:02d}"
+            / f"session={session_type}.parquet"
+        )
         path.parent.mkdir(parents=True, exist_ok=True)
         df.to_parquet(path, index=False)
         logger.info("wrote %s rows to %s", len(df), path.relative_to(RAW_DIR.parent))

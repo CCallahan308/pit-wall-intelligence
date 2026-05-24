@@ -27,9 +27,9 @@ from pitwall.models.degradation_curve import DegradationModel
 class DriverPlan:
     code: str
     grid: int
-    base_pace_s: float          # clean-air pace at minimum fuel
+    base_pace_s: float  # clean-air pace at minimum fuel
     pit_laps: list[int]
-    compounds: list[str]        # one entry per stint, len(pit_laps)+1
+    compounds: list[str]  # one entry per stint, len(pit_laps)+1
     pit_loss_s: float = 21.0
 
 
@@ -37,12 +37,12 @@ class DriverPlan:
 class RaceConfig:
     circuit: str
     total_laps: int
-    sc_rate_per_race: float = 0.6   # mean number of SC periods per race
+    sc_rate_per_race: float = 0.6  # mean number of SC periods per race
     sc_neutralisation_s: float = 35.0
     overtake_difficulty_s: float = 0.4  # pace advantage needed to pass per lap
     fuel_burn_s_per_lap: float = 0.048  # ~0.03s/kg * 1.6kg/lap
-    lap_time_noise_s: float = 0.25     # per-lap pace noise (sigma) -- traffic, kerbs, tyre temp
-    pit_loss_noise_s: float = 0.8      # per-stop pit-loss variance
+    lap_time_noise_s: float = 0.25  # per-lap pace noise (sigma) -- traffic, kerbs, tyre temp
+    pit_loss_noise_s: float = 0.8  # per-stop pit-loss variance
 
 
 @dataclass

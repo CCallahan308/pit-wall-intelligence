@@ -35,8 +35,10 @@ class DegradationModel:
     circuit_baseline: dict[str, float] = field(default_factory=dict)
     min_samples_per_curve: int = 30
 
-    def fit(self, stints: pd.DataFrame, laps: pd.DataFrame) -> "DegradationModel":
-        df = laps.dropna(subset=["LapTimeFuelCorrected", "Compound", "StintPosition", "CircuitName"])
+    def fit(self, stints: pd.DataFrame, laps: pd.DataFrame) -> DegradationModel:
+        df = laps.dropna(
+            subset=["LapTimeFuelCorrected", "Compound", "StintPosition", "CircuitName"]
+        )
 
         # Per-circuit baseline = 10th-percentile fuel-corrected pace at that circuit.
         # Used as the anchor when the global compound curve is applied.
@@ -46,7 +48,10 @@ class DegradationModel:
         # Global per-compound curve fit on *residuals* (lap_time - circuit_baseline)
         # so the curve generalises across circuits.
         for compound, g in df.groupby("Compound"):
-            residual = g["LapTimeFuelCorrected"].to_numpy() - g["CircuitName"].map(self.circuit_baseline).to_numpy()
+            residual = (
+                g["LapTimeFuelCorrected"].to_numpy()
+                - g["CircuitName"].map(self.circuit_baseline).to_numpy()
+            )
             model = IsotonicRegression(out_of_bounds="clip")
             model.fit(g["StintPosition"].to_numpy(), residual)
             self.global_curves[compound] = model
@@ -68,7 +73,9 @@ class DegradationModel:
         if key in self.curves:
             return self.curves[key].predict(ages)
         if compound in self.global_curves:
-            baseline = self.circuit_baseline.get(circuit, np.nanmedian(list(self.circuit_baseline.values())))
+            baseline = self.circuit_baseline.get(
+                circuit, np.nanmedian(list(self.circuit_baseline.values()))
+            )
             return self.global_curves[compound].predict(ages) + baseline
         return np.full_like(ages, np.nan)
 
@@ -80,7 +87,9 @@ class DegradationModel:
 
     def mae(self, stints: pd.DataFrame, laps: pd.DataFrame) -> float:
         """MAE in seconds between predicted and actual fuel-corrected lap time."""
-        df = laps.dropna(subset=["LapTimeFuelCorrected", "Compound", "StintPosition", "CircuitName"]).copy()
+        df = laps.dropna(
+            subset=["LapTimeFuelCorrected", "Compound", "StintPosition", "CircuitName"]
+        ).copy()
         preds = np.empty(len(df))
         for i, row in enumerate(df.itertuples(index=False)):
             preds[i] = self.predict_pace(row.Compound, row.CircuitName, row.StintPosition)[0]

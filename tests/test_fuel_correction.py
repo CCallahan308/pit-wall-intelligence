@@ -32,13 +32,15 @@ def test_fuel_correction_subtracts_load():
 
 
 def test_apply_adds_column():
-    df = pd.DataFrame({
-        "Year": [2024] * 4,
-        "Round": [1] * 4,
-        "Driver": ["VER"] * 4,
-        "LapNumber": [1, 2, 3, 4],
-        "LapTime": [90.0, 89.8, 89.6, 89.4],
-    })
+    df = pd.DataFrame(
+        {
+            "Year": [2024] * 4,
+            "Round": [1] * 4,
+            "Driver": ["VER"] * 4,
+            "LapNumber": [1, 2, 3, 4],
+            "LapTime": [90.0, 89.8, 89.6, 89.4],
+        }
+    )
     out = apply(df)
     assert "LapTimeFuelCorrected" in out.columns
     assert out["LapTimeFuelCorrected"].notna().all()

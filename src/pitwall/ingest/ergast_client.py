@@ -31,20 +31,22 @@ def race_results(year: int, rnd: int | None = None) -> pd.DataFrame:
     rows = []
     for race in races:
         for res in race["Results"]:
-            rows.append({
-                "year": int(race["season"]),
-                "round": int(race["round"]),
-                "race_name": race["raceName"],
-                "circuit": race["Circuit"]["circuitName"],
-                "driver_code": res["Driver"]["code"],
-                "driver_id": res["Driver"]["driverId"],
-                "constructor": res["Constructor"]["name"],
-                "grid": int(res["grid"]),
-                "position": int(res["position"]) if res["position"].isdigit() else None,
-                "points": float(res["points"]),
-                "status": res["status"],
-                "fastest_lap_rank": int(res.get("FastestLap", {}).get("rank", 0) or 0),
-            })
+            rows.append(
+                {
+                    "year": int(race["season"]),
+                    "round": int(race["round"]),
+                    "race_name": race["raceName"],
+                    "circuit": race["Circuit"]["circuitName"],
+                    "driver_code": res["Driver"]["code"],
+                    "driver_id": res["Driver"]["driverId"],
+                    "constructor": res["Constructor"]["name"],
+                    "grid": int(res["grid"]),
+                    "position": int(res["position"]) if res["position"].isdigit() else None,
+                    "points": float(res["points"]),
+                    "status": res["status"],
+                    "fastest_lap_rank": int(res.get("FastestLap", {}).get("rank", 0) or 0),
+                }
+            )
     return pd.DataFrame(rows)
 
 
@@ -55,15 +57,17 @@ def pit_stops(year: int, rnd: int) -> pd.DataFrame:
         return pd.DataFrame()
     rows = []
     for stop in races[0].get("PitStops", []):
-        rows.append({
-            "year": year,
-            "round": rnd,
-            "driver_id": stop["driverId"],
-            "stop_number": int(stop["stop"]),
-            "lap": int(stop["lap"]),
-            "time_of_day": stop["time"],
-            "duration_s": float(stop["duration"]),
-        })
+        rows.append(
+            {
+                "year": year,
+                "round": rnd,
+                "driver_id": stop["driverId"],
+                "stop_number": int(stop["stop"]),
+                "lap": int(stop["lap"]),
+                "time_of_day": stop["time"],
+                "duration_s": float(stop["duration"]),
+            }
+        )
     return pd.DataFrame(rows)
 
 
@@ -74,15 +78,17 @@ def qualifying(year: int, rnd: int | None = None) -> pd.DataFrame:
     rows = []
     for race in races:
         for q in race["QualifyingResults"]:
-            rows.append({
-                "year": int(race["season"]),
-                "round": int(race["round"]),
-                "driver_code": q["Driver"]["code"],
-                "driver_id": q["Driver"]["driverId"],
-                "constructor": q["Constructor"]["name"],
-                "position": int(q["position"]),
-                "q1": q.get("Q1"),
-                "q2": q.get("Q2"),
-                "q3": q.get("Q3"),
-            })
+            rows.append(
+                {
+                    "year": int(race["season"]),
+                    "round": int(race["round"]),
+                    "driver_code": q["Driver"]["code"],
+                    "driver_id": q["Driver"]["driverId"],
+                    "constructor": q["Constructor"]["name"],
+                    "position": int(q["position"]),
+                    "q1": q.get("Q1"),
+                    "q2": q.get("Q2"),
+                    "q3": q.get("Q3"),
+                }
+            )
     return pd.DataFrame(rows)

@@ -62,20 +62,26 @@ def stint_summary(laps: pd.DataFrame) -> pd.DataFrame:
             ss_tot = float(np.sum((y - y.mean()) ** 2)) or 1.0
             r2 = 1.0 - ss_res / ss_tot
 
-        rows.append({
-            "Year": int(year),
-            "Round": int(rnd),
-            "Driver": drv,
-            "Stint": int(stint),
-            "Compound": g["Compound"].iloc[0] if "Compound" in g else None,
-            "StintLength": int(g["LapNumber"].nunique()),
-            "FirstLap": int(g["LapNumber"].min()),
-            "LastLap": int(g["LapNumber"].max()),
-            "MeanPaceCleanS": float(clean["LapTimeFuelCorrected"].mean()) if len(clean) else np.nan,
-            "MedianPaceCleanS": float(clean["LapTimeFuelCorrected"].median()) if len(clean) else np.nan,
-            "DegSlopeSPerLap": float(slope) if not np.isnan(slope) else np.nan,
-            "DegInterceptS": float(intercept) if not np.isnan(intercept) else np.nan,
-            "DegFitR2": float(r2) if not np.isnan(r2) else np.nan,
-            "NumCleanLaps": int(len(clean)),
-        })
+        rows.append(
+            {
+                "Year": int(year),
+                "Round": int(rnd),
+                "Driver": drv,
+                "Stint": int(stint),
+                "Compound": g["Compound"].iloc[0] if "Compound" in g else None,
+                "StintLength": int(g["LapNumber"].nunique()),
+                "FirstLap": int(g["LapNumber"].min()),
+                "LastLap": int(g["LapNumber"].max()),
+                "MeanPaceCleanS": float(clean["LapTimeFuelCorrected"].mean())
+                if len(clean)
+                else np.nan,
+                "MedianPaceCleanS": float(clean["LapTimeFuelCorrected"].median())
+                if len(clean)
+                else np.nan,
+                "DegSlopeSPerLap": float(slope) if not np.isnan(slope) else np.nan,
+                "DegInterceptS": float(intercept) if not np.isnan(intercept) else np.nan,
+                "DegFitR2": float(r2) if not np.isnan(r2) else np.nan,
+                "NumCleanLaps": len(clean),
+            }
+        )
     return pd.DataFrame(rows)
