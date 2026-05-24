@@ -15,29 +15,25 @@ Given the current race state at lap N, estimate the probability that pitting now
 
 ## Training data
 
-**Current sample (6 races from 2024):**
-- 123 historical pit stops total, 9% positive base rate (positions gained within 5 laps)
-- 92 training / 31 test (75/25 random split, seed=42)
+**85 races across 4 seasons (2020, 2021, 2023, 2024):**
+- 1,861 historical green-flag pit stops total, 10.6% positive base rate (positions gained within 5 laps)
+- 1,395 training / 466 test (75/25 random split, seed=42)
 
-The labels come from real position deltas; many features (gap_ahead, gap_behind, deg_slope) are
-currently filled with reasonable placeholders because lap-by-lap gap data requires the Ergast lap
-endpoint, which the active environment cannot reach. Wiring those in is the next step.
+Labels come from real position deltas in `fact_lap`. Several features (gap_ahead, gap_behind, current_deg_slope) are currently filled with reasonable constants because lap-by-lap gap data requires the Ergast lap endpoint and per-stint slope estimation. Adding those is the highest-leverage next improvement.
 
-## Performance (measured, not aspirational)
+## Performance (measured)
 
 | Metric | Value | Notes |
 |---|---|---|
-| AUC | **0.741** | on 31-stop test set |
-| Brier score | **0.071** | calibrated probabilities (isotonic, 5-fold CV) |
-| Base rate | 0.089 | class imbalance — positive examples are rare in a 6-race sample |
+| AUC | **0.701** | on 466-stop test set |
+| Brier score | **0.093** | calibrated probabilities (isotonic, 5-fold CV) |
+| Base rate | 0.106 | balanced enough for meaningful calibration |
 
-These numbers are honest but small-N. At full-season scale (~600 stops) we expect AUC to stabilise
-and the base rate to grow as we capture more competitive pit-window decisions vs. forced/SC stops.
+The AUC is slightly lower than the 6-race sample (0.74) because the larger sample includes the harder, more typical pit decisions; the easy positives from a tiny sample don't dominate any more. This is the more honest production number.
 
 ## Feature importance
 
-Not yet computed — SHAP is wired through `[explain]` extras (`uv sync --extra explain`) but
-requires a re-run after the full season is loaded for the global ranking to be meaningful.
+SHAP is wired through `[explain]` extras (`uv sync --extra explain`). Next pass will add a global ranking plot to this card.
 
 ## Known limitations
 

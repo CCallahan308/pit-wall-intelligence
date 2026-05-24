@@ -4,5 +4,5 @@ pitwall:
     dev:
       type: duckdb
       path: "../data/processed/pitwall.duckdb"
-      threads: 4
+      threads: 1   # DuckDB file-lock contention with multiple threads on Windows
       # parquet is now built-in to duckdb; httpfs only needed for remote reads.

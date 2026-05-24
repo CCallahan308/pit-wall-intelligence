@@ -26,4 +26,4 @@ stints as (
     group by 1, 2, 3, 4, 5, 6
 )
 select * from stints
-where clean_laps >= 3
+where clean_laps >= 5    -- short stints produce noisy OLS slopes

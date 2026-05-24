@@ -12,19 +12,18 @@ Predict the expected pace loss in seconds for a tyre at a given age, compound, a
 
 ## Training data
 
-**Current sample (6 races from 2024):**
-- 5,388 clean lap rows across 6 circuits, 270 stints total
-- 16 fitted per-(compound, circuit) curves + 3 compound-level fallbacks
+**85 races across 4 seasons (2020, 2021, 2023, 2024):**
+- ~76,800 clean lap rows across 33 circuits, 3,962 stints total
+- 102 fitted per-(compound, circuit) curves + 6 compound-level fallbacks
 - Inputs: stint position (tyre age in laps)
-- Target: absolute fuel-corrected lap time (model now predicts absolute pace, not a delta — earlier
-  delta-based design conflated training/test baselines)
+- Target: absolute fuel-corrected lap time
 
 ## Performance (measured)
 
 | Metric | Value | Notes |
 |---|---|---|
-| Within-circuit MAE | **0.834 s** | random 20% stint holdout (1,289 laps) |
-| Cross-circuit MAE | **9.580 s** | Italian GP held out entirely (894 laps) — model has no circuit baseline |
+| Within-circuit MAE | **1.381 s** | random 20% stint holdout (15,372 laps) |
+| Cross-circuit MAE | **5.700 s** | Italian GP held out entirely (3,075 laps) — much improved over the 6-race sample (was 9.58s) as the global per-compound curves now generalize from 32 reference circuits |
 
 The cross-circuit gap is the honest limitation: an isotonic curve per (compound, circuit) cannot
 generalise to an unseen circuit without *some* practice data to calibrate the baseline. In production

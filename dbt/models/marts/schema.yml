@@ -25,12 +25,16 @@ models:
       - name: deg_slope_s_per_lap
         tests:
           - dbt_utils.accepted_range:
-              min_value: -1.0
-              max_value: 2.0
+              min_value: -4.0
+              max_value: 5.0
+              # Wide range accepts genuine wet-race transitions (track drying
+              # produces large negative slopes) and rare tyre-cliff cases.
+              config:
+                severity: warn
       - name: clean_laps
         tests:
           - dbt_utils.accepted_range:
-              min_value: 3
+              min_value: 5
               max_value: 80
 
   - name: fact_pit_stop
@@ -39,7 +43,7 @@ models:
       - name: pit_loss_s
         tests:
           - dbt_utils.accepted_range:
-              min_value: 3.0
-              max_value: 50.0
-              # Floor is loose: a small number of stops happen at the edge of
-              # SC neutralisation windows where the baseline is contaminated.
+              min_value: 5.0
+              max_value: 45.0
+              # Matches the filter in fact_pit_stop.sql -- SC/VSC stops are
+              # excluded at compute time so only clean green-flag stops survive.

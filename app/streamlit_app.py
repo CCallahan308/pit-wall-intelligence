@@ -81,7 +81,9 @@ def _kpi_data() -> dict:
 d = _kpi_data()
 
 c1, c2, c3, c4 = st.columns(4)
-c1.markdown(kpi("Races ingested", f"{d['races']}", "2024 sample"), unsafe_allow_html=True)
+c1.markdown(
+    kpi("Races ingested", f"{d['races']}", "2020 / 2021 / 2023 / 2024"), unsafe_allow_html=True
+)
 c2.markdown(kpi("Lap rows", f"{d['laps']:,}", "Post-dbt fact_lap"), unsafe_allow_html=True)
 c3.markdown(
     kpi("Stints modelled", f"{d['stints']:,}", "With degradation slopes"), unsafe_allow_html=True
@@ -96,16 +98,16 @@ c1, c2, c3 = st.columns(3)
 c1.markdown(
     kpi(
         "Degradation MAE",
-        "0.83 s",
-        "Within-circuit holdout (1,289 laps)",
+        "1.38 s",
+        "Within-circuit holdout (15,372 laps)",
     ),
     unsafe_allow_html=True,
 )
 c2.markdown(
     kpi(
         "Undercut classifier",
-        "0.741 AUC",
-        "Brier 0.071 - calibrated LightGBM",
+        "0.701 AUC",
+        "Brier 0.093 - calibrated LightGBM",
     ),
     unsafe_allow_html=True,
 )

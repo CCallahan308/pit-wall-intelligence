@@ -48,9 +48,9 @@ For low-sample combinations (< 30 observations) we fall back to a compound-only 
 
 Bootstrap 95% confidence intervals are computed by resampling stints with replacement.
 
-**Measured performance (6-race 2024 sample):**
-- Within-circuit MAE: **0.83 s** (random 20% stint holdout)
-- Cross-circuit MAE: **9.58 s** (entire circuit held out — model needs circuit-specific calibration data, which teams always have via FP1/2/3)
+**Measured performance (85-race, 4-season sample):**
+- Within-circuit MAE: **1.38 s** (random 20% stint holdout, 15,372 test laps)
+- Cross-circuit MAE: **5.70 s** (entire Italian GP held out — improved from 9.58s on the 6-race sample as 32 reference circuits now anchor the compound-level fallback)
 
 ## 5. Pit stop cost
 
@@ -62,18 +62,23 @@ pit_loss = (in_lap + out_lap) - 2 * clean_air_baseline
 
 Where `clean_air_baseline` is the 10th percentile of fuel-corrected lap times within ±3 laps of the stop, excluding the stop itself.
 
-Computed per circuit with bootstrap 95% CI. **Measured values (6-race 2024 sample):**
+Computed per circuit with bootstrap 95% CI. **Measured values (85-race, 33-circuit sample):**
 
 | Circuit | Median | 95% CI | n stops |
 |---|---|---|---|
-| Spa (Belgian GP) | 20.05 s | [19.72, 20.64] | 32 |
-| Miami GP | 21.06 s | [21.26, 26.13] | 14 |
-| Saudi Arabian GP | 23.15 s | [21.75, 38.15] | 5 |
-| Monaco GP | 25.39 s | [23.80, 31.77] | 6 |
-| Bahrain GP | 25.76 s | [24.41, 26.69] | 40 |
-| Italian GP (Monza) | 26.93 s | [27.05, 29.99] | 30 |
+| Belgian GP (Spa) | 20.46 s | [20.45, 21.69] | 74 |
+| Miami GP | 20.94 s | [21.10, 23.44] | 33 |
+| Australian GP | 21.79 s | [21.63, 24.65] | 33 |
+| US GP | 22.50 s | [22.48, 23.66] | 98 |
+| Austrian GP | 22.67 s | [23.11, 24.68] | 98 |
+| Monaco GP | 23.04 s | [23.46, 26.82] | 37 |
+| Bahrain GP | 25.85 s | [26.25, 27.24] | 154 |
+| Italian GP (Monza) | 26.57 s | [26.93, 28.71] | 67 |
+| British GP | 28.63 s | [27.08, 30.77] | 73 |
+| Emilia Romagna GP (Imola) | 29.96 s | [30.74, 32.84] | 63 |
+| Singapore GP | 31.42 s | [31.00, 32.73] | 25 |
 
-Reproducible via `scripts/train_and_validate.py`.
+33 circuits ingested in total — Singapore is the slowest pit lane, Spa the fastest. Reproducible via `scripts/train_and_validate.py`.
 
 ## 6. Undercut classifier
 
@@ -94,13 +99,12 @@ Reproducible via `scripts/train_and_validate.py`.
 
 **Target:** historical truth — did the actual pit stop gain net positions within 5 laps?
 
-**Measured metrics (6-race 2024 sample, 123 stops → 92 train / 31 test):**
-- AUC: **0.741**
-- Brier score: **0.071**
-- Base rate: 0.089 (class imbalance is real at this sample size)
+**Measured metrics (85-race sample, 1,861 stops → 1,395 train / 466 test):**
+- AUC: **0.701**
+- Brier score: **0.093**
+- Base rate: 0.106 (positions gained within 5 laps of pit)
 
-The model is calibrated (isotonic, 5-fold CV) but small-N. At full-season scale we expect AUC to
-stabilise as the positive-class share grows.
+The model is calibrated via isotonic regression on 5-fold CV. The AUC is honest — it dropped from 0.74 on the small 6-race sample because larger data contains the harder, more typical pit decisions that don't fit a simple pattern.
 
 **Explainability:** SHAP values are computed for every prediction and surfaced in the Streamlit app — gap-ahead and tyre-age delta consistently dominate.
 
