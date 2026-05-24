@@ -1,0 +1,10 @@
+pitwall:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "../data/processed/pitwall.duckdb"
+      threads: 4
+      extensions:
+        - httpfs
+        - parquet

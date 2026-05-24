@@ -1,0 +1,43 @@
+version: 2
+
+models:
+  - name: fact_lap
+    description: "One row per driver-lap with fuel-corrected pace and cleanliness flags."
+    columns:
+      - name: year
+        tests: [not_null]
+      - name: round_num
+        tests: [not_null]
+      - name: driver_code
+        tests: [not_null]
+      - name: lap_number
+        tests: [not_null]
+      - name: lap_time_s
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 50
+              max_value: 300
+
+  - name: fact_stint
+    description: "One row per (race, driver, stint) with degradation slope and pace."
+    columns:
+      - name: deg_slope_s_per_lap
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: -1.0
+              max_value: 2.0
+      - name: clean_laps
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 3
+              max_value: 80
+
+  - name: fact_pit_stop
+    description: "One row per pit stop with the time loss vs. clean-air pace."
+    columns:
+      - name: pit_loss_s
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 10.0
+              max_value: 45.0

@@ -1,0 +1,26 @@
+name: Refresh data
+
+on:
+  schedule:
+    # Every Monday at 06:00 UTC — after Sunday race weekends
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Pull latest race
+        env:
+          PITWALL_YEAR: "2024"
+        run: |
+          uv run python -m pitwall.ingest.fastf1_client --year ${PITWALL_YEAR} --all
