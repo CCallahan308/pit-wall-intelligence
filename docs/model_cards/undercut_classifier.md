@@ -52,17 +52,34 @@ All 13 features are derived from `fact_lap` by `src/pitwall/features/undercut.py
 
 ## Feature importance
 
-![Feature importance](figures/feature_importance.png)
+Two complementary views, both committed to `docs/model_cards/figures/`:
 
-Top 5 by LightGBM gain (averaged across 5 calibration folds):
+### Gain importance (LightGBM internal, training-time)
 
-1. `gap_ahead_s` (1,706)
-2. `gap_behind_s` (1,678)
-3. `current_deg_slope` (1,492)
-4. `race_progress_pct` (1,083)
-5. `track_evolution_s_per_lap` (802)
+![Gain importance](figures/feature_importance.png)
 
-The fact that the four newly-engineered features (gap_ahead, gap_behind, deg_slope, track_evolution) dominate validates the feature pipeline. Earlier drafts had these as hardcoded constants and the model was effectively 5-dimensional.
+### Permutation importance on held-out test (model-agnostic, decision-time)
+
+![Permutation importance](figures/permutation_importance.png)
+
+Permutation importance measures how much Brier score degrades when each feature is shuffled on the test set. This is widely considered the gold-standard model-agnostic global ranking — it directly measures decision-relevant predictive value rather than tree-split frequency.
+
+**Why not SHAP?** The `shap` package depends on `llvmlite` which fails to build on the active Python version. Rather than fake a SHAP plot, we use permutation importance for the global view and LightGBM's `predict_contrib` (TreeSHAP under the hood, without the shap library) for per-prediction explanations. Both are honest and arguably more defensible than a vanilla SHAP summary plot. See `docs/known_limitations.md` §3 and `scripts/explain_undercut.py`.
+
+### Per-prediction explanations
+
+`scripts/explain_undercut.py` writes contributions for representative test stops to `data/processed/local_explanations.csv`. Example output for a high-probability prediction:
+
+```
+Race 2024_22, ALO pit lap 4: P(gain)=0.588, actual=NO
+    race_progress_pct           +2.620
+    tyre_age                    +1.290
+    track_evolution_s_per_lap   +1.195
+    gap_behind_s                +0.778
+    pit_loss_circuit_s          -0.619
+```
+
+The classifier flagged this as a likely-gain stop, but it didn't gain in reality — exactly the kind of case where a strategist should overlay their own knowledge of the specific car and tyre allocation.
 
 ## Calibration
 

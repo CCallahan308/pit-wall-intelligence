@@ -1,4 +1,4 @@
-.PHONY: help install ingest build train test lint format dbt app api mlflow-ui notebook clean
+.PHONY: help install ingest build train test lint format dbt app api mlflow-ui notebook retrospective sensitivity explain bench reproduce clean
 
 help:
 	@echo "Pit Wall Intelligence — make targets"
@@ -29,6 +29,21 @@ notebook:
 
 mlflow-ui:
 	uv run mlflow ui --backend-store-uri file:./data/processed/mlruns --port 5000
+
+retrospective:
+	uv run python scripts/race_retrospective.py
+
+sensitivity:
+	uv run python scripts/sensitivity_analysis.py
+
+explain:
+	uv run python scripts/explain_undercut.py
+
+bench:
+	uv run python scripts/bench_api.py
+
+reproduce: build train sensitivity retrospective explain bench notebook
+	@echo "All artifacts regenerated."
 
 test:
 	uv run pytest tests/ -v

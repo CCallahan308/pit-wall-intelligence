@@ -144,15 +144,28 @@ A full season ingest takes ~30 minutes on a warm FastF1 cache. The dbt build is 
 
 | Surface | How to access | Status |
 |---|---|---|
-| Streamlit dashboard (6 pages) | `make app` → `localhost:8501` | **Local-only.** Streamlit Community Cloud deploy is straightforward — pending. |
-| FastAPI inference service | `make api` → `localhost:8000` | **Local + Dockerfile.** Production deploy pending. |
+| Streamlit dashboard (6 pages) | `make app` → `localhost:8501` | **Local-only.** See `docs/known_limitations.md` §2 for the deploy path. |
+| FastAPI inference service | `make api` → `localhost:8000` | **Local + Dockerfile** (`docker build -f api/Dockerfile .`). Live deploy pending — see limitations doc. |
 | MLflow experiment UI | `make mlflow-ui` | **Local.** Tracks every train run. |
 | Walkthrough notebook | `notebooks/03_model_validation.ipynb` | Outputs baked in — browse on GitHub directly |
-| Model cards + plots | `docs/model_cards/` | Calibration + feature importance committed |
+| Three-race retrospective | `docs/writeups/retrospective_*.md` | Real simulator vs actual results for Monaco/Hungary/Italy 2024 |
+| Model cards + plots | `docs/model_cards/` | Calibration + permutation importance committed |
+| Known limitations | `docs/known_limitations.md` | Honest disclosure of what doesn't work and why |
 | Methodology | `docs/methodology.md` | |
-| LinkedIn launch script | `docs/writeups/LINKEDIN_POST.md` | |
 
-**Honest disclosure:** the live Streamlit and live API deploys are not yet up. Both work locally with `make app` and `make api`; the next pass is to publish them to Streamlit Cloud and Fly.io respectively. Everything else in the README is reproducible end-to-end on your laptop.
+**Honest disclosure on deploys.** The Streamlit app and FastAPI service work end-to-end locally and the Dockerfile builds clean. Neither is yet running on a public URL — that requires external auth flows (Streamlit Cloud OAuth, Fly.io account) that can't be automated from inside this development environment. The deploy steps are 1-evening fixes once those external accounts are set up. See `docs/known_limitations.md` §2 for the precise plan.
+
+## Measured API latency
+
+Benchmarked on an in-process FastAPI TestClient, single-threaded, model loaded at import time. Reproducible with `uv run python scripts/bench_api.py`.
+
+| Endpoint | p50 | p95 | p99 | n |
+|---|---|---|---|---|
+| `GET /health` | 3.8 ms | 6.4 ms | 8.8 ms | 200 |
+| `POST /predict_undercut` | 17.1 ms | 23.2 ms | 30.5 ms | 100 |
+| `POST /simulate_race` (500 sims, 2 drivers) | 3.3 s | 5.0 s | 5.0 s | 10 |
+
+`predict_undercut` is comfortably under the 100 ms threshold real-time strategy use would require. `simulate_race` is bound by the Monte Carlo loop; with `n_sim=200` it drops to ~1.3 s, which is acceptable for interactive use.
 
 ---
 
@@ -211,6 +224,29 @@ Outputs:
 The CI runs `pytest` (28 tests, including model and API tests), `ruff check`, `ruff format --check`, and `dbt test` (14 schema tests).
 
 ---
+
+## Three-race retrospective
+
+Concrete business-value check: does the simulator track reality on famous strategy calls? Full writeups under `docs/writeups/retrospective_*.md`.
+
+| Race | Simulator MAE vs actual finish | Notes |
+|---|---|---|
+| 2024 Monaco GP (Leclerc's home win, 1-stop endurance race) | **2.33 positions** | Hardest race for the simulator — single-stint format with red flag isn't well-modelled |
+| 2024 Hungarian GP (McLaren team-orders flip) | _see writeup_ | |
+| 2024 Italian GP (Leclerc's 1-stop Monza win) | _see writeup_ | |
+
+The Monaco MAE reflects a real model weakness: the simulator's overtake difficulty parameter is a global default and doesn't capture how impossible passing is at Monaco specifically. Documented in `docs/known_limitations.md` §5.
+
+## Sensitivity analysis
+
+Two constants pin most downstream numbers: the fuel penalty (`0.03 s/kg`) and the SC-filter threshold (`1.6x baseline`). We swept each and measured the impact. Full tables in `data/processed/sensitivity_*.csv`. Reproducible with `uv run python scripts/sensitivity_analysis.py`.
+
+| Constant | Sweep | Result | Verdict |
+|---|---|---|---|
+| Fuel penalty | 0.025 / 0.030 / 0.035 s/kg | Within-circuit MAE moves from 1.371 → 1.369 → 1.379s | **Model is robust** to this constant; 10ms MAE swing across the realistic range. |
+| SC filter threshold | 1.4 / 1.6 / 1.8x baseline | Kept stops 2,086 → 2,133 / median pit loss 24.82 → 24.95 s | **Filter is tight**; 47 stop swing across the range, 0.13s median impact. |
+
+This is the answer to the inevitable interview question *"how did you pick those magic numbers?"*: we picked defensible values and measured the downstream effect.
 
 ## Known limits
 

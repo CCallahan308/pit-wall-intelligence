@@ -1,0 +1,138 @@
+name: Weekly retrain
+
+# Re-ingests the most recent races, rebuilds the dbt warehouse, retrains
+# every model, and posts the metric delta to a tracking issue.
+#
+# Schedule: every Monday at 06:00 UTC (after Sunday races).
+# Triggers also on workflow_dispatch so you can run it ad-hoc.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+    inputs:
+      season:
+        description: "Year to refresh"
+        required: false
+        default: "2024"
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  retrain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Install Python
+        run: uv python install 3.11
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Pull latest season
+        id: ingest
+        env:
+          PITWALL_YEAR: ${{ inputs.season || '2024' }}
+        run: |
+          uv run python scripts/ingest_seasons.py --start ${PITWALL_YEAR} --end ${PITWALL_YEAR} 2>&1 | tail -50
+
+      - name: Build dbt warehouse
+        run: |
+          cd dbt && uv run dbt deps --profiles-dir .
+          cd dbt && uv run dbt build --threads 1 --profiles-dir .
+
+      - name: Train + validate
+        id: train
+        run: |
+          uv run python scripts/train_and_validate.py 2>&1 | tee train_output.txt
+
+      - name: Read metrics
+        id: metrics
+        run: |
+          if [ -f data/processed/model_comparison.json ]; then
+            python -c "
+          import json
+          d = json.loads(open('data/processed/model_comparison.json').read())
+          lgb = [m for m in d['models'] if 'LightGBM' in m['name']][0]
+          summary = (
+              f\"LightGBM AUC: {lgb['auc']:.3f}  |  Brier: {lgb['brier']:.4f}\\n\"
+              f\"5-fold GroupKFold AUC: {d['cv_auc_mean']:.3f} +/- {d['cv_auc_std']:.3f}\\n\"
+              f\"Base rate: {d['base_rate']:.3f}  |  Train races: {d['n_train_races']}  |  Test races: {d['n_test_races']}\"
+          )
+          open('metric_summary.txt', 'w').write(summary)
+          print(summary)
+          "
+          else
+            echo "No model_comparison.json produced; pipeline failed before metrics step." > metric_summary.txt
+          fi
+
+      - name: Post metrics to tracking issue
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let summary = "Retrain run failed before metrics could be produced.";
+            try {
+              summary = fs.readFileSync('metric_summary.txt', 'utf8');
+            } catch (e) {}
+
+            const status = "${{ job.status }}";
+            const body = [
+              `## Weekly retrain — run #${context.runNumber}`,
+              "",
+              `**Status:** ${status}`,
+              `**Commit:** ${context.sha.substring(0, 7)}`,
+              `**Triggered by:** ${context.eventName}`,
+              "",
+              "**Metrics:**",
+              "```",
+              summary,
+              "```",
+              "",
+              `[View full run logs](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`,
+            ].join("\n");
+
+            // Find or create the tracking issue
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const title = "Tracking: weekly retrain metrics";
+            const issues = await github.rest.issues.listForRepo({
+              owner, repo, state: "open", labels: ["retrain-tracking"],
+            });
+            let issue = issues.data.find(i => i.title === title);
+            if (!issue) {
+              const created = await github.rest.issues.create({
+                owner, repo, title,
+                body: "Weekly retrain runs append metrics as comments here. Open one to see the trend over time.",
+                labels: ["retrain-tracking"],
+              });
+              issue = created.data;
+            }
+            await github.rest.issues.createComment({
+              owner, repo, issue_number: issue.number, body,
+            });
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: retrain-${{ github.run_number }}
+          path: |
+            data/processed/model_comparison.json
+            data/processed/loco_degradation_mae.csv
+            data/processed/circuit_pit_cost.csv
+            docs/model_cards/figures/calibration.png
+            docs/model_cards/figures/feature_importance.png
+            train_output.txt
+            metric_summary.txt
+          if-no-files-found: warn

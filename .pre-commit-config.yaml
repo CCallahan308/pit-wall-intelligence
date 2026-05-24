@@ -1,0 +1,37 @@
+# Pre-commit hooks for Pit Wall Intelligence.
+#
+# Install:    uv run pre-commit install
+# Run all:    uv run pre-commit run --all-files
+#
+# These hooks mirror what CI checks, so commits never get rejected for
+# something you could have caught locally in a second.
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-added-large-files
+        args: [--maxkb=2000]
+      - id: check-merge-conflict
+      - id: detect-private-key
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+
+  - repo: local
+    hooks:
+      # Fast unit tests on changed files only. CI runs the full suite.
+      - id: pytest-fast
+        name: pytest (fast subset)
+        entry: uv run pytest tests/test_fuel_correction.py tests/test_stint_features.py tests/test_pit_cost.py -q
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
