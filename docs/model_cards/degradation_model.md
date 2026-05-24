@@ -18,12 +18,18 @@ Predict the expected pace loss in seconds for a tyre at a given age, compound, a
 - Inputs: stint position (tyre age in laps)
 - Target: absolute fuel-corrected lap time
 
-## Performance (measured)
+## Performance (measured, with leave-one-circuit-out)
 
 | Metric | Value | Notes |
 |---|---|---|
 | Within-circuit MAE | **1.381 s** | random 20% stint holdout (15,372 laps) |
-| Cross-circuit MAE | **5.700 s** | Italian GP held out entirely (3,075 laps) — much improved over the 6-race sample (was 9.58s) as the global per-compound curves now generalize from 32 reference circuits |
+| LOCO MAE (median across 33 circuits) | **9.42 s** | IQR [5.70, 12.88] |
+| LOCO MAE (worst 3 circuits) | Sakhir 33s, Belgian 22s, Styrian 22s | sparse coverage / unusual base lap times |
+| LOCO MAE (best 3 circuits) | Sao Paulo 3.4s, Bahrain 3.5s, Spanish 3.8s | densely-sampled circuits |
+
+**Read this honestly:** an earlier draft of this card quoted "cross-circuit MAE 5.70s" from a single-circuit holdout (Italian GP). Italian is one of the easier circuits to predict. The leave-one-circuit-out median (9.4s) is the honest cross-circuit generalisation gap. In production, this model is meant to be used **with** FP1/FP2/FP3 data for the current circuit, not zero-shot.
+
+Full LOCO table: `data/processed/loco_degradation_mae.csv`.
 
 The cross-circuit gap is the honest limitation: an isotonic curve per (compound, circuit) cannot
 generalise to an unseen circuit without *some* practice data to calibrate the baseline. In production

@@ -1,4 +1,4 @@
-.PHONY: help install ingest build test lint format dbt app api clean
+.PHONY: help install ingest build train test lint format dbt app api mlflow-ui notebook clean
 
 help:
 	@echo "Pit Wall Intelligence — make targets"
@@ -19,11 +19,20 @@ ingest:
 	uv run python -m pitwall.ingest.fastf1_client --year 2024 --all
 
 build:
-	cd dbt && uv run dbt build
+	cd dbt && uv run dbt build --threads 1
+
+train:
+	uv run python scripts/train_and_validate.py
+
+notebook:
+	uv run python scripts/build_notebook.py
+
+mlflow-ui:
+	uv run mlflow ui --backend-store-uri file:./data/processed/mlruns --port 5000
 
 test:
 	uv run pytest tests/ -v
-	cd dbt && uv run dbt test
+	cd dbt && uv run dbt test --threads 1
 
 lint:
 	uv run ruff check src/ tests/
