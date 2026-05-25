@@ -23,15 +23,17 @@ All numbers below come from the latest `train_and_validate.py` run on **85 races
 
 ### Undercut classifier — model comparison
 
-Group-aware split: `GroupShuffleSplit` on `(year, round_num)`. **63 train races, 21 test races, no race overlap.** 5-fold `GroupKFold` cross-validation reported as mean ± std.
+Group-aware split: `GroupShuffleSplit` on `(year, round_num)`. **62 train races, 21 test races, no race overlap.** Trained on **GREEN-flag stops only** (1,667 stops, 9.8% base rate) — SC/VSC stops are excluded because their dynamics are categorically different. 5-fold `GroupKFold` cross-validation reported as mean ± std.
 
 | Model | AUC | Brier | Log loss |
 |---|---|---|---|
-| Constant (predict base rate 0.106) | 0.500 | 0.0937 | 0.335 |
-| Threshold rule (`tyre_age >= 15`) | 0.407 | 0.234 | 0.669 |
-| Logistic regression (class-weighted) | **0.821** | 0.249 | 0.693 |
-| **LightGBM (isotonic calibrated)** | 0.687 | **0.0882** | **0.313** |
-| 5-fold GroupKFold AUC | 0.690 ± 0.043 | — | — |
+| Constant (predict base rate 0.098) | 0.500 | 0.0877 | 0.319 |
+| Threshold rule (`tyre_age >= 15`) | 0.448 | 0.238 | 0.669 |
+| Logistic regression (class-weighted) | **0.706** | 0.214 | 0.617 |
+| **LightGBM (isotonic calibrated)** | 0.674 | **0.0837** | **0.301** |
+| 5-fold GroupKFold AUC | 0.662 ± 0.053 | — | — |
+
+**Why AUC is lower than the earlier 0.69:** the prior model trained on all stop types including SC/VSC, where everyone gains position. Excluding those removes the "easy positives" — the GREEN-only AUC is the honest number a strategy engineer should care about.
 
 **Read this honestly:**
 - Logistic regression is the best **ranker** — it tells you which stops are more likely to be successful undercuts.
@@ -53,7 +55,7 @@ Calibration plot and feature-importance plot are committed at `docs/model_cards/
 
 The LOCO median is the honest cross-circuit number. An earlier draft of this project quoted "5.7s cross-circuit MAE" — that was the single-circuit holdout (Italian GP) which happens to be one of the easier circuits to predict. **The actual generalization gap is larger.** A senior reviewer should know this.
 
-### Pit-cost calculator — 33 circuits
+### Pit-cost calculator — 33 circuits, with SC/VSC separation
 
 Median pit loss with bootstrap 95% CIs. Top + bottom 3:
 
@@ -66,6 +68,20 @@ Median pit loss with bootstrap 95% CIs. Top + bottom 3:
 | **Slowest pit lanes** | | | |
 | Emilia Romagna GP (Imola) | 29.96 s | [30.74, 32.84] | 63 |
 | Singapore GP | 31.42 s | [31.00, 32.73] | 25 |
+
+### Pit-cost by regime (the regulatory-literacy distinction)
+
+`fact_pit_stop` now carries a **`pit_type`** column derived from track-status codes in the in-lap + out-lap + 2-lap surrounding window. SC and VSC pits have fundamentally different economics from green-flag pits — exactly the distinction every real strategy engineer makes on the pit wall.
+
+| pit_type | n stops | min | median | p90 | What it means |
+|---|---|---|---|---|---|
+| **GREEN** | 1,724 | 17.0 s | **24.6 s** | 31.1 s | Normal racing — full pit-loss penalty |
+| **SC** (Safety Car) | 104 | **3.6 s** | 33.3 s | 47.5 s | Field bunches at SC pace — early stops are nearly free |
+| **VSC** (Virtual SC) | 83 | 20.1 s | 34.8 s | 46.8 s | Hold-delta-time rule — saves less than SC, often costs more than green |
+| **YELLOW** | 215 | 0.7 s | 26.4 s | 40.8 s | Local yellow — minor pace impact |
+| **RED** | 7 | 39.2 s | 45.0 s | 47.6 s | Red-flag stops; tyre-change rules differ |
+
+The 3.6 s SC minimum is the textbook "SC saves your pit stop" finding that a real strategist races to exploit. The **undercut classifier trains on GREEN stops only** because SC/VSC dynamics are too different to mix into the same decision regime.
 
 Full ranking lives at `data/processed/circuit_pit_cost.csv` and is rendered in the Streamlit landing page.
 

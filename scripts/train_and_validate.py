@@ -364,6 +364,9 @@ def main() -> None:
     )
     print(f"  fact_stint:        {len(stints):,} rows")
     print(f"  fact_pit_stop:     {len(pits_raw):,} rows")
+    if "pit_type" in pits_raw.columns:
+        type_counts = pits_raw["pit_type"].value_counts().to_dict()
+        print(f"  pit type breakdown:  {type_counts}")
 
     # ---- Degradation with LOCO ----
     print("\n[2/6] Tyre degradation model with LOCO cross-validation...")
@@ -404,8 +407,19 @@ def main() -> None:
     cost.to_csv(PROCESSED_DIR / "circuit_pit_cost.csv", index=False)
 
     # ---- Real undercut features ----
-    print("\n[4/6] Building REAL undercut features (no hardcoded constants)...")
-    feats = build_features(all_laps, pits_raw, deg["prod_model"])
+    # Train ONLY on GREEN-flag stops. SC/VSC/RED dynamics are too different
+    # to mix into the same classifier -- a strategist treats them as
+    # separate decision regimes.
+    print("\n[4/6] Building REAL undercut features (GREEN-flag stops only)...")
+    if "pit_type" in pits_raw.columns:
+        pits_for_training = pits_raw[pits_raw["pit_type"] == "GREEN"]
+        print(
+            f"  using {len(pits_for_training):,} GREEN stops "
+            f"({len(pits_raw) - len(pits_for_training):,} SC/VSC/YELLOW/RED excluded)"
+        )
+    else:
+        pits_for_training = pits_raw
+    feats = build_features(all_laps, pits_for_training, deg["prod_model"])
     feats = feats.reset_index(drop=True)
     print(f"  examples:        {len(feats):,} pit stops")
     print(f"  positive rate:   {feats['label'].mean():.3f}")

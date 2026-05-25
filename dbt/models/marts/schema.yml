@@ -43,7 +43,13 @@ models:
       - name: pit_loss_s
         tests:
           - dbt_utils.accepted_range:
-              min_value: 5.0
-              max_value: 45.0
-              # Matches the filter in fact_pit_stop.sql -- SC/VSC stops are
-              # excluded at compute time so only clean green-flag stops survive.
+              min_value: -10.0
+              max_value: 50.0
+              # SC stops can have very low or negative pit_loss because the
+              # field bunches under neutralisation. GREEN stops are tightened
+              # to [5, 45] inside the SQL.
+      - name: pit_type
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['GREEN', 'SC', 'VSC', 'YELLOW', 'RED']

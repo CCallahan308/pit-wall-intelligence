@@ -80,3 +80,19 @@ dbt/.user.yml
 dbt/target/
 dbt/logs/
 dbt/dbt_packages/
+
+# AI assistant dev files
+CLAUDE.md
+.claude/
+.claude-code/
+.cursor/
+.cursorrules
+.aider*
+.github-copilot/
+.continue/
+.windsurf/
+GEMINI.md
+COPILOT.md
+.specstory/
+ai_notes/
+.ai-cache/

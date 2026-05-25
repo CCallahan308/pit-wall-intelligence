@@ -43,3 +43,5 @@
 | `in_lap_s`, `out_lap_s` | float | Fuel-corrected in-lap and out-lap times |
 | `baseline_s` | float | 10th-percentile clean-air pace within ±5 laps |
 | `pit_loss_s` | float | `(in_lap + out_lap) - 2 * baseline` |
+| `pit_type` | str | GREEN / SC / VSC / YELLOW / RED — see methodology §8 |
+| `in_lap_status`, `out_lap_status` | str | Raw FastF1 track-status string for the in-lap and out-lap |

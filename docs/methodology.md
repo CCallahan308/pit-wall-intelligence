@@ -129,7 +129,25 @@ Monte Carlo (default: 10,000 sims). Each iteration:
 
 These are reasonable simplifications for a public model — F1 teams add proprietary aero, tyre-energy, and brake-temp models on top.
 
-## 8. What this is not
+## 8. Safety Car vs Virtual Safety Car distinction
+
+A real strategy engineer never lumps SC and VSC pits with green-flag pits. The economics are different:
+
+| Regime | FastF1 status code | What happens | Pit cost impact |
+|---|---|---|---|
+| **Green** | `1` | Normal racing | Full ~22-25s pit-loss penalty |
+| **Yellow** | `2` | Local yellow flag | Modest pace impact, near-green |
+| **SC** | `4` | Full Safety Car | Field bunches at SC pace; pit can cost as little as 3-5s |
+| **Red** | `5` | Red-flag stoppage | Tyre changes often free (regulation-dependent) |
+| **VSC** | `6` / `7` | Virtual Safety Car | Hold-delta-time rule — saves less than SC, sometimes costs *more* than green because the in-lap is slower |
+
+`fact_pit_stop.pit_type` is derived by inspecting the track-status codes of the in-lap, out-lap, and ±2 surrounding laps. FastF1 packs multiple status transitions per lap into a single string (e.g. `'12'` = saw both green and yellow on the same lap), so we use substring presence rather than equality.
+
+The classification order is **RED > SC > VSC > YELLOW > GREEN** — if any code in the window indicates a more-restrictive flag, that wins.
+
+**Practical impact on the undercut classifier:** we train on GREEN stops only. Mixing in SC/VSC would let the model learn "the field gained positions when an SC was deployed" — a true but useless signal (you can't predict when an SC will arrive, and if one does the strategy decision is fundamentally different anyway).
+
+## 9. What this is not
 
 - **Not a race-winner predictor.** Winning a race is dominated by car performance, which we deliberately do not model. We quantify *decisions*, not *outcomes*.
 - **Not real-time.** Live timing requires a paid feed; we use post-session FastF1 data.
