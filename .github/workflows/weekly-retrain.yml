@@ -46,9 +46,12 @@ jobs:
           uv run python scripts/ingest_seasons.py --start ${PITWALL_YEAR} --end ${PITWALL_YEAR} 2>&1 | tail -50
 
       - name: Build dbt warehouse
+        # Both commands run from dbt/ in the same shell; the earlier
+        # two-`cd` form failed because each `run:` block starts a fresh shell.
+        working-directory: dbt
         run: |
-          cd dbt && uv run dbt deps --profiles-dir .
-          cd dbt && uv run dbt build --threads 1 --profiles-dir .
+          uv run dbt deps --profiles-dir .
+          uv run dbt build --threads 1 --profiles-dir .
 
       - name: Train + validate
         id: train

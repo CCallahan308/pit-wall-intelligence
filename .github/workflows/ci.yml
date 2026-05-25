@@ -24,9 +24,12 @@ jobs:
         run: uv sync --extra dev
 
       - name: Lint
+        # Lint everywhere we have first-party code, not just src/ tests/.
+        # Previously app/ scripts/ api/ would slip through CI and only get
+        # caught locally.
         run: |
-          uv run ruff check src/ tests/
-          uv run ruff format --check src/ tests/
+          uv run ruff check src/ tests/ app/ scripts/ api/
+          uv run ruff format --check src/ tests/ app/ scripts/ api/
 
       - name: Type check
         run: uv run mypy src/ || true   # informational for now
